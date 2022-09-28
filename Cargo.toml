@@ -1,5 +1,6 @@
 [package]
 name = "gcstat"
+description = "stat genomics data by bin"
 version = "0.0.1"
 edition = "2021"
 authors = ["Ye Chang <yech1990@gmail.com>"]
