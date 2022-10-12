@@ -1,3 +1,4 @@
+use bam::record::Aux;
 use rust_htslib::faidx;
 use rust_htslib::{bam, bam::Read};
 use std::collections::HashMap;
@@ -45,7 +46,8 @@ pub fn run(bam_path: PathBuf, fasta_path: PathBuf, region_path: PathBuf, win: us
 
     let dna_bases = &vec!['A', 'C', 'G', 'T'];
     let mut gc_background: HashMap<usize, usize> = HashMap::new();
-    let mut gc_counter: HashMap<usize, usize> = HashMap::new();
+    let mut yf_counter: HashMap<usize, usize> = HashMap::new();
+    let mut zf_counter: HashMap<usize, usize> = HashMap::new();
     let fa_reader = &faidx::Reader::from_path(&fasta_path).unwrap();
     let mut bam = bam::IndexedReader::from_path(&bam_path).unwrap();
     bam.set_reference(&fasta_path).expect("Set ref");
@@ -101,9 +103,34 @@ pub fn run(bam_path: PathBuf, fasta_path: PathBuf, region_path: PathBuf, win: us
                     if total > 0 {
                         bam.fetch((chrom, span_start as i64, span_end as i64))
                             .unwrap();
-                        let n = bam.records().count();
-                        if n > 0 {
-                            gc_counter.entry(gci).and_modify(|e| *e += n).or_insert(n);
+                        for record in bam.records() {
+                            let r = record.unwrap();
+                            let yf = match r.aux(b"Yf") {
+                                Ok(value) => {
+                                    let v = if let Aux::I8(v) = value { v } else { todo!() };
+                                    Some(v)
+                                }
+                                Err(_e) => None,
+                            };
+                            let zf = match r.aux(b"Zf") {
+                                Ok(value) => {
+                                    let v = if let Aux::I8(v) = value { v } else { todo!() };
+                                    Some(v)
+                                }
+                                Err(_e) => None,
+                            };
+                            if yf.is_some() & zf.is_some() {
+                                let yf_count = yf.unwrap() as usize;
+                                let zf_count = zf.unwrap() as usize;
+                                yf_counter
+                                    .entry(gci)
+                                    .and_modify(|e| *e += yf_count)
+                                    .or_insert(yf_count);
+                                zf_counter
+                                    .entry(gci)
+                                    .and_modify(|e| *e += zf_count)
+                                    .or_insert(zf_count);
+                            }
                         }
                     }
                     span_start += step;
@@ -113,7 +140,13 @@ pub fn run(bam_path: PathBuf, fasta_path: PathBuf, region_path: PathBuf, win: us
             Err(..) => {}
         }
     }
-    for (k, v) in gc_counter {
-        println!("{}\t{}\t{}", k as f64 / 1000.0, v, gc_background[&k]);
+    for (k, v) in yf_counter {
+        println!(
+            "{}\t{}\t{}\t{}",
+            k as f64 / 1000.0,
+            v,
+            zf_counter[&k],
+            gc_background[&k]
+        );
     }
 }

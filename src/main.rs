@@ -1,5 +1,6 @@
 mod depth;
 mod gc;
+mod tag;
 
 use clap::Parser;
 use std::path::{Path, PathBuf};
@@ -17,11 +18,36 @@ struct Opts {
 #[derive(Parser)]
 enum SubCommand {
     GC(GC),
+    Tag(Tag),
     Depth(Depth),
 }
 
 #[derive(Parser)]
 struct GC {
+    #[clap(short = 'b', long = "bam", help = "input bam file..", validator = file_path_validation)]
+    bam: PathBuf,
+    #[clap(short = 'f', long = "fasta", help = "input fa file..", validator = file_path_validation)]
+    fa: PathBuf,
+    #[clap(short = 'r', long = "region", help = "input bam file..", validator = file_path_validation)]
+    region: PathBuf,
+    #[clap(
+        short = 'w',
+        long = "window",
+        help = "Set window size for GC calculation",
+        default_value = "100"
+    )]
+    window: usize,
+    #[clap(
+        short = 's',
+        long = "step",
+        help = "Set step size for GC calculation",
+        default_value = "10000"
+    )]
+    step: usize,
+}
+
+#[derive(Parser)]
+struct Tag {
     #[clap(short = 'b', long = "bam", help = "input bam file..", validator = file_path_validation)]
     bam: PathBuf,
     #[clap(short = 'f', long = "fasta", help = "input fa file..", validator = file_path_validation)]
@@ -69,6 +95,9 @@ fn main() {
     match opts.subcmd {
         SubCommand::GC(o) => {
             gc::run(o.bam, o.fa, o.region, o.window, o.step);
+        }
+        SubCommand::Tag(o) => {
+            tag::run(o.bam, o.fa, o.region, o.window, o.step);
         }
         SubCommand::Depth(o) => {
             depth::run(o.debug);

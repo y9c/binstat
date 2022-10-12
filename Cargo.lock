@@ -29,6 +29,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
+name = "binstat"
+version = "0.0.1"
+dependencies = [
+ "clap",
+ "rust-htslib",
+]
+
+[[package]]
 name = "bio-types"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -168,14 +176,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6fc7a9dc005c944c98a935e7fd626faf5bf7e5a609f94bc13e42fc4a02e52593"
 dependencies = [
  "quick-error",
-]
-
-[[package]]
-name = "gcstat"
-version = "0.1.0"
-dependencies = [
- "clap",
- "rust-htslib",
 ]
 
 [[package]]
